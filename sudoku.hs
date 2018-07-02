@@ -1,7 +1,16 @@
+module Sudoku(
+    Row(..),
+    Grid(..),
+    makeEmptySudokuGrid,
+    valid
+) where
+
 import qualified Data.Map as Map
 import Data.Bifunctor (bimap)
 import Data.Maybe
 import Data.Monoid
+import Data.List.Split
+import Data.List
 import Control.Monad (join)
 
 type Row = Map.Map Int Char
@@ -15,6 +24,7 @@ makeEmptyGrid size =
 makeEmptySudokuGrid :: Grid
 makeEmptySudokuGrid = makeEmptyGrid 9
 
+digits :: [Char]
 digits = ['1'..'9']
 
 insertToGrid :: Int -> Int -> Char -> Grid -> Grid
@@ -54,9 +64,16 @@ find3by3 pos = join bimap (`rem` 3) pos
 
 isInGrid :: (Int, Int) -> Grid -> Bool
 isInGrid pos grid =
-    '.' /= fromJust $ Map.lookup (snd pos) $ fromJust $ Map.lookup (fst pos) grid
+    '.' /=  (fromJust $ Map.lookup (snd pos) $ fromJust $ Map.lookup (fst pos) grid)
 
-vaild :: Char -> (Int, Int) -> Grid -> Bool
-vaild digit pos grid = 
+valid :: Char -> (Int, Int) -> Grid -> Bool
+valid digit pos grid = 
     not $ getAny $ mconcat $ map (Any . (elem digit)) 
         [get3by3 (find3by3 pos) grid, getRow (fst pos) grid, getCol (snd pos) grid]  
+
+printSudokuGrid :: Grid -> IO[()]
+printSudokuGrid grid = do
+    let rows = map flattenRow $ snd $ unzip $ Map.toList grid
+    mapM putStrLn rows
+
+
