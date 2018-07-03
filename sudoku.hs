@@ -66,10 +66,27 @@ isInGrid :: (Int, Int) -> Grid -> Bool
 isInGrid pos grid =
     '.' /=  (fromJust $ Map.lookup (snd pos) $ fromJust $ Map.lookup (fst pos) grid)
 
+specialRem :: Int -> Int -> Int 
+specialRem index size
+    | r == 0 = size
+    | otherwise = r
+    where r = index `rem` size 
+
+getGridPos :: Int -> Int -> (Int, Int)
+getGridPos size index = 
+    (index `specialRem` size, ceiling((fromIntegral index)/(fromIntegral size)))
+
 valid :: Char -> (Int, Int) -> Grid -> Bool
 valid digit pos grid = 
     not $ getAny $ mconcat $ map (Any . (elem digit)) 
         [get3by3 (find3by3 pos) grid, getRow (fst pos) grid, getCol (snd pos) grid]  
+
+unflatten :: Int -> String -> Grid
+unflatten size flatgrid =
+    Map.fromList $ zip [1..] $ map (Map.fromList . zip [1..]) $ chunksOf size flatgrid
+
+instance Functor Grid where
+    fmap f grid = unflatten (gridSize grid) $ map f $ flatten grid
 
 printSudokuGrid :: Grid -> IO[()]
 printSudokuGrid grid = do
