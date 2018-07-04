@@ -26,7 +26,7 @@ makeEmptySudokuGrid = makeEmptyGrid 9
 
 insertToGrid :: (Int, Int) -> Char -> Grid -> Grid
 insertToGrid (row, col) char grid = 
-    Map.insert row (Map.insert col digit $ fromJust $ Map.lookup row grid) grid
+    Map.insert row (Map.insert col char $ fromJust $ Map.lookup row grid) grid
 
 flattenHelper :: [(Int, Map.Map Int a)] -> [(Int, a)] 
 flattenHelper [x] = Map.toList(snd x)
@@ -83,20 +83,17 @@ unflatten :: Int -> String -> Grid
 unflatten size flatgrid =
     Map.fromList $ zip [1..] $ map (Map.fromList . zip [1..]) $ chunksOf size flatgrid
 
-instance Functor Grid where
-    fmap f grid = unflatten (gridSize grid) $ map f $ flatten grid
-
 digits :: [Char]
 digits = ['1'..'9']
 
 solveProg :: Grid -> Int -> Int -> Maybe Grid
-solveProg grid index digitIndex=
-    | vaild (digits!!digitIndex) pos grid && not (isInGrid pos grid) = 
-        let solvedGrid = solveProg (insertToGrid pos (digits!!digindex) grid) (index+1) digitIndex 
-        in if solvedGrid /= Nothing then Just solvedGrid else solveProg grid index (digitIndex+1)
+solveProg grid index digitIndex
+    | valid (digits!!digitIndex) pos grid && not (isInGrid pos grid) = 
+        let solvedGrid = solveProg (insertToGrid pos (digits!!digitIndex) grid) (index+1) digitIndex 
+        in if solvedGrid /= Nothing then solvedGrid else solveProg grid index (digitIndex+1)
     | isInGrid pos grid && valid (getCharInGrid pos grid) pos grid = 
-        let solvedGrid = solveProg grid (index+1) digitIndex grid 
-        in if solvedGrid /= Nothing then Just solvedGrid else solveProg grid (index+1) (digitIndex+1)
+        let solvedGrid = solveProg grid (index+1) digitIndex 
+        in if solvedGrid /= Nothing then solvedGrid else solveProg grid (index+1) (digitIndex+1)
     | otherwise = Nothing
     where pos = (getGridPos 9 index)
      
