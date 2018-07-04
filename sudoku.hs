@@ -24,13 +24,9 @@ makeEmptyGrid size =
 makeEmptySudokuGrid :: Grid
 makeEmptySudokuGrid = makeEmptyGrid 9
 
-digits :: [Char]
-digits = ['1'..'9']
-
-insertToGrid :: Int -> Int -> Char -> Grid -> Grid
-insertToGrid row col digit grid 
-    | elem digit digits = Map.insert row (Map.insert col digit $ fromJust $ Map.lookup row grid) grid
-    | otherwise = error "not a digit"
+insertToGrid :: (Int, Int) -> Char -> Grid -> Grid
+insertToGrid (row, col) char grid = 
+    Map.insert row (Map.insert col digit $ fromJust $ Map.lookup row grid) grid
 
 flattenHelper :: [(Int, Map.Map Int a)] -> [(Int, a)] 
 flattenHelper [x] = Map.toList(snd x)
@@ -62,9 +58,11 @@ getCol col grid =
 find3by3 :: (Int, Int) -> (Int, Int)
 find3by3 pos = join bimap (`rem` 3) pos 
 
+getCharInGrid :: (Int, Int) -> Grid -> Char 
+getCharInGrid pos grid = fromJust $ Map.lookup (snd pos) $ fromJust $ Map.lookup (fst pos) grid
+
 isInGrid :: (Int, Int) -> Grid -> Bool
-isInGrid pos grid =
-    '.' /=  (fromJust $ Map.lookup (snd pos) $ fromJust $ Map.lookup (fst pos) grid)
+isInGrid pos grid = '.' /= getCharInGrid pos grid 
 
 specialRem :: Int -> Int -> Int 
 specialRem index size
@@ -88,6 +86,23 @@ unflatten size flatgrid =
 instance Functor Grid where
     fmap f grid = unflatten (gridSize grid) $ map f $ flatten grid
 
+digits :: [Char]
+digits = ['1'..'9']
+
+solveProg :: Grid -> Int -> Int -> Maybe Grid
+solveProg grid index digitIndex=
+    | vaild (digits!!digitIndex) pos grid && not (isInGrid pos grid) = 
+        let solvedGrid = solveProg (insertToGrid pos (digits!!digindex) grid) (index+1) digitIndex 
+        in if solvedGrid /= Nothing then Just solvedGrid else solveProg grid index (digitIndex+1)
+    | isInGrid pos grid && valid (getCharInGrid pos grid) pos grid = 
+        let solvedGrid = solveProg grid (index+1) digitIndex grid 
+        in if solvedGrid /= Nothing then Just solvedGrid else solveProg grid (index+1) (digitIndex+1)
+    | otherwise = Nothing
+    where pos = (getGridPos 9 index)
+     
+solve :: Grid -> Grid
+solve grid = fromJust $ solveProg grid 1 0 
+    
 printSudokuGrid :: Grid -> IO[()]
 printSudokuGrid grid = do
     let rows = map flattenRow $ snd $ unzip $ Map.toList grid
