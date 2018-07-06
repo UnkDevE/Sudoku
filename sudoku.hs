@@ -12,6 +12,7 @@ import Data.Monoid
 import Data.List.Split
 import Data.List
 import Control.Monad (join)
+import System.Random
 
 type Row = Map.Map Int Char
 type Grid = Map.Map Int Row
@@ -99,7 +100,19 @@ solveProg grid index digitIndex
      
 solve :: Grid -> Grid
 solve grid = fromJust $ solveProg grid 1 0 
-    
+
+getDigitInGrid :: Grid -> Int -> Int
+getDigitInGrid grid gen = abs $ specialRem (fst $ random $ mkStdGen gen) $ gridSize grid
+
+fillSudokuGrid :: Grid -> Int -> Grid
+fillSudokuGrid grid 0 = grid
+fillSudokuGrid grid clues
+    | valid digit (x, y) grid = fillSudokuGrid (insertToGrid (x, y) digit grid) (clues-1) 
+    | otherwise = fillSudokuGrid grid clues
+    where x = getDigitInGrid grid clues
+          y = getDigitInGrid grid (clues + 1)
+          digit = digits!!(mod (fst $ random $ mkStdGen (clues+2)) $ gridSize grid)
+
 printSudokuGrid :: Grid -> IO[()]
 printSudokuGrid grid = do
     let rows = map flattenRow $ snd $ unzip $ Map.toList grid

@@ -57,7 +57,7 @@ executable Sudoku
   -- other-extensions:
 
   -- Other library packages from which modules are imported.
-  build-depends:       base >=4.11 && <4.12, split, containers 
+  build-depends:       base >=4.11 && <4.12, split, containers, random
 
   -- Directories containing source files.
   -- hs-source-dirs:
