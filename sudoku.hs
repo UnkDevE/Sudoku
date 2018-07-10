@@ -11,6 +11,7 @@ import Data.Maybe
 import Data.Monoid
 import Data.List.Split
 import Data.List
+import Debug.Trace
 import Control.Monad (join)
 import System.Random
 
@@ -65,15 +66,15 @@ getCharInGrid pos grid = fromJust $ Map.lookup (snd pos) $ fromJust $ Map.lookup
 isInGrid :: (Int, Int) -> Grid -> Bool
 isInGrid pos grid = '.' /= getCharInGrid pos grid 
 
-specialRem :: Int -> Int -> Int 
-specialRem index size
+specialMod :: Int -> Int -> Int 
+specialMod index size
     | r == 0 = size
     | otherwise = r
-    where r = index `rem` size 
+    where r = index `mod` size 
 
 getGridPos :: Int -> Int -> (Int, Int)
 getGridPos size index = 
-    (index `specialRem` size, ceiling((fromIntegral index)/(fromIntegral size)))
+    (index `specialMod` size, ceiling((fromIntegral index)/(fromIntegral size)))
 
 valid :: Char -> (Int, Int) -> Grid -> Bool
 valid digit pos grid = 
@@ -87,14 +88,19 @@ unflatten size flatgrid =
 digits :: [Char]
 digits = ['1'..'9']
 
+solveProgDebug :: Grid -> Int -> Int -> Maybe Grid
+solveProgDebug grid index digitIndex = trace 
+    ("calling solveProg with g: " ++ show grid ++ " i: " ++ show index ++ " dI: " ++ show digitIndex )
+    solveProg grid index digitIndex
+
 solveProg :: Grid -> Int -> Int -> Maybe Grid
 solveProg grid index digitIndex
     | valid (digits!!digitIndex) pos grid && not (isInGrid pos grid) = 
-        let solvedGrid = solveProg (insertToGrid pos (digits!!digitIndex) grid) (index+1) digitIndex 
-        in if solvedGrid /= Nothing then solvedGrid else solveProg grid index (digitIndex+1)
+        let solvedGrid = solveProgDebug (insertToGrid pos (digits!!digitIndex) grid) (index+1) digitIndex 
+        in if solvedGrid /= Nothing then solvedGrid else solveProgDebug grid (index+1) (digitIndex+1)
     | isInGrid pos grid && valid (getCharInGrid pos grid) pos grid = 
-        let solvedGrid = solveProg grid (index+1) digitIndex 
-        in if solvedGrid /= Nothing then solvedGrid else solveProg grid (index+1) (digitIndex+1)
+        let solvedGrid = solveProgDebug grid (index+1) digitIndex 
+        in if solvedGrid /= Nothing then solvedGrid else solveProgDebug grid (index+1) (digitIndex+1)
     | otherwise = Nothing
     where pos = (getGridPos 9 index)
      
@@ -102,7 +108,7 @@ solve :: Grid -> Grid
 solve grid = fromJust $ solveProg grid 1 0 
 
 getDigitInGrid :: Grid -> Int -> Int
-getDigitInGrid grid gen = abs $ specialRem (fst $ random $ mkStdGen gen) $ gridSize grid
+getDigitInGrid grid gen = specialMod (fst $ random $ mkStdGen gen) $ gridSize grid
 
 fillSudokuGrid :: Grid -> Int -> Grid
 fillSudokuGrid grid 0 = grid
