@@ -96,9 +96,7 @@ solveProgDebug grid index digitIndex = trace
 solveProg :: Grid -> Int -> Int -> Maybe Grid
 solveProg grid index digitIndex
     | valid (digits!!digitIndex) pos grid && not (isInGrid pos grid) = 
-        let solvedGrid = solveProgDebug 
-            (trace ("inserting pos: " ++ show pos ++ " digit: " ++ [digits!!digitIndex]) 
-                (insertToGrid pos (digits!!digitIndex) grid)) (index+1) digitIndex 
+        let solvedGrid = solveProgDebug (trace ("inserting pos: " ++ show pos ++ " digit: " ++ [digits!!digitIndex]) (insertToGrid pos (digits!!digitIndex) grid)) (index+1) (digitIndex+1) 
         in if solvedGrid /= Nothing then solvedGrid else solveProgDebug grid index (digitIndex+1)
     | isInGrid pos grid && valid (getCharInGrid pos grid) pos grid = 
         let solvedGrid = solveProgDebug grid (index+1) (digitIndex+1) 
