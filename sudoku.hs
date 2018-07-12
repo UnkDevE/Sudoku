@@ -90,22 +90,20 @@ digits = ['1'..'9']
 
 solveProgDebug :: Grid -> Int -> Int -> Maybe Grid
 solveProgDebug grid index digitIndex = trace 
-    ("calling solveProg with i: " ++ show index ++ " dI: " ++ show digitIndex )
+    ("calling solveProg with g: " ++ show grid ++ "\n i: " ++ show index ++ "\n dI: " ++ show digitIndex )
     solveProg grid index digitIndex
 
 solveProg :: Grid -> Int -> Int -> Maybe Grid
 solveProg grid index digitIndex
     | valid (digits!!digitIndex) pos grid && not (isInGrid pos grid) = 
-        let solvedGrid = solveProgDebug (trace ("inserting pos: " ++ show pos ++ " digit: " ++ [digits!!digitIndex]) (insertToGrid pos (digits!!digitIndex) grid)) (index+1) (digitIndex+1) 
-        in if solvedGrid /= Nothing then solvedGrid else solveProgDebug grid index (digitIndex+1)
-    | isInGrid pos grid && valid (getCharInGrid pos grid) pos grid = 
-        let solvedGrid = solveProgDebug grid (index+1) (digitIndex+1) 
-        in if solvedGrid /= Nothing then solvedGrid else solveProg grid index digitIndex
+        let solvedGrid = solveProgDebug (trace ("inserting pos: " ++ show pos ++ " digit: " ++ [digits!!digitIndex]) (insertToGrid pos (digits!!digitIndex) grid)) (index+1) 0 
+        in if solvedGrid /= Nothing then solvedGrid else solveProgDebug (insertToGrid pos (digits!!digitIndex) grid) (index+1) (digitIndex+1)
+    | isInGrid pos grid && valid (getCharInGrid pos grid) pos grid = trace "valid and in grid" solveProgDebug grid (index+1) 0 
     | otherwise = Nothing
     where pos = (getGridPos 9 index)
      
 solve :: Grid -> Grid
-solve grid = fromJust $ solveProg grid 1 0 
+solve grid = fromJust $ solveProg grid 0 0 
 
 getDigitInGrid :: Grid -> Int -> Int
 getDigitInGrid grid gen = abs $ specialRem (fst $ random $ mkStdGen gen) $ gridSize grid
