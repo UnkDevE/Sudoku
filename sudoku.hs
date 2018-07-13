@@ -14,6 +14,7 @@ import Data.List
 import Debug.Trace
 import Control.Monad (join)
 import System.Random
+import Control.Arrow
 
 type Row = Map.Map Int Char
 type Grid = Map.Map Int Row
@@ -96,26 +97,26 @@ solveProgDebug grid index digitIndex = trace
 solveProg :: Grid -> Int -> Int -> Maybe Grid
 solveProg grid index digitIndex
     | valid (digits!!digitIndex) pos grid && not (isInGrid pos grid) = 
-        let solvedGrid = solveProgDebug (trace ("inserting pos: " ++ show pos ++ " digit: " ++ [digits!!digitIndex]) (insertToGrid pos (digits!!digitIndex) grid)) (index+1) 0 
+        let solvedGrid = solveProgDebug (trace ("inserting pos: " ++ show pos ++ " digit: " ++ [digits!!digitIndex]) (insertToGrid pos (digits!!digitIndex) grid)) (index+1) (digitIndex) 
         in if solvedGrid /= Nothing then solvedGrid else solveProgDebug (insertToGrid pos (digits!!digitIndex) grid) (index+1) (digitIndex+1)
     | isInGrid pos grid && valid (getCharInGrid pos grid) pos grid = trace "valid and in grid" solveProgDebug grid (index+1) 0 
-    | otherwise = Nothing
+    | otherwise = trace ("g: " ++ show grid ++ "\npos: " ++ show pos ++ "\ndigitIndex: " ++ show digitIndex) Nothing
     where pos = (getGridPos 9 index)
      
 solve :: Grid -> Grid
 solve grid = fromJust $ solveProg grid 0 0 
 
-getDigitInGrid :: Grid -> Int -> Int
-getDigitInGrid grid gen = abs $ specialRem (fst $ random $ mkStdGen gen) $ gridSize grid
+getDigitInGrid :: Grid -> StdGen -> (Int, StdGen)
+getDigitInGrid grid gen = first (abs . (\x y -> specialRem y x) (gridSize grid)) $ random gen 
 
-fillSudokuGrid :: Grid -> Int -> Grid
-fillSudokuGrid grid 0 = grid
-fillSudokuGrid grid clues
-    | valid digit (x, y) grid = fillSudokuGrid (insertToGrid (x, y) digit grid) (clues-1) 
-    | otherwise = fillSudokuGrid grid clues
-    where x = getDigitInGrid grid clues
-          y = getDigitInGrid grid (clues + 1)
-          digit = digits!!(abs $ rem (fst $ random $ mkStdGen (clues+2)) $ gridSize grid)
+fillSudokuGrid :: Grid -> StdGen -> Int -> Grid
+fillSudokuGrid grid gen 0 = grid
+fillSudokuGrid grid gen clues
+    | valid digit (x, y) grid = fillSudokuGrid (insertToGrid (x, y) digit grid) gen'' (clues-1) 
+    | otherwise = fillSudokuGrid grid gen' clues
+    where (x, gen') = getDigitInGrid grid gen
+          (y, gen'') = getDigitInGrid grid gen'
+          digit = digits!!(abs $ rem (fst $ random gen'') $ gridSize grid)
 
 printSudokuGrid :: Grid -> IO[()]
 printSudokuGrid grid = do
