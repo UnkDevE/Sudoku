@@ -142,6 +142,7 @@ solveProgDebug grid index digitIndex = trace
 
 solveProg :: Grid -> Int -> Int -> Maybe Grid
 solveProg grid index digitIndex
+    | digitIndex > 8 = Nothing
     | valid (digits!!digitIndex) pos grid && not (isInGrid pos grid) = 
         let solvedGrid = solveProgDebug (trace ("inserting pos: " ++ show pos ++ " digit: " ++ [digits!!digitIndex]) (insertToGrid pos (digits!!digitIndex) grid)) (index+1) (digitIndex) 
         in if solvedGrid /= Nothing then solvedGrid else solveProgDebug (insertToGrid pos (digits!!digitIndex) grid) (index+1) (digitIndex+1)
@@ -149,8 +150,14 @@ solveProg grid index digitIndex
     | otherwise = trace ("g: " ++ show grid ++ "\npos: " ++ show pos ++ "\ndigitIndex: " ++ show digitIndex) Nothing
     where pos = (getGridPos 9 index)
      
-solve :: Grid -> Grid
-solve grid = fromJust $ solveProg grid 0 0 
+solveP :: Grid -> Int -> Maybe Grid
+solveP grid digitIndex  
+    | digitIndex > 8 = trace ("digitIndex : " ++ show digitIndex) Just grid
+    | otherwise = let solvedGrid = solveProgDebug grid 1 digitIndex
+        in if solvedGrid /= Nothing then solvedGrid else solveP grid (digitIndex+1)  
+
+solve :: Grid -> Maybe Grid
+solve grid = solveP grid 0
 
 getDigitInGrid :: Grid -> StdGen -> (Int, StdGen)
 getDigitInGrid grid gen = first (abs . (\x y -> specialRem y x) (gridSize grid)) $ random gen 
