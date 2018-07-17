@@ -137,27 +137,25 @@ digits = ['1'..'9']
 
 solveProgDebug :: Grid -> Int -> Int -> Maybe Grid
 solveProgDebug grid index digitIndex = trace 
-    ("calling solveProg with g: " ++ show grid ++ "\n i: " ++ show index ++ "\n dI: " ++ show digitIndex )
+    ("calling solveProg with index: " ++ show index ++ " digit: " ++ show digitIndex )
     solveProg grid index digitIndex
 
 solveProg :: Grid -> Int -> Int -> Maybe Grid
 solveProg grid index digitIndex
     | digitIndex > 8 = Nothing
-    | valid (digits!!digitIndex) pos grid && not (isInGrid pos grid) = 
-        let solvedGrid = solveProgDebug (trace ("inserting pos: " ++ show pos ++ " digit: " ++ [digits!!digitIndex]) (insertToGrid pos (digits!!digitIndex) grid)) (index+1) (digitIndex) 
-        in if solvedGrid /= Nothing then solvedGrid else solveProgDebug (insertToGrid pos (digits!!digitIndex) grid) (index+1) (digitIndex+1)
+    | valid (digits!!digitIndex) pos grid && not (isInGrid pos grid) = trace ("valid! pos: " ++ show pos ++ " digit: " ++ [digits!!digitIndex]) solveP (insertToGrid pos (digits!!digitIndex) grid) (index+1) 0
     | isInGrid pos grid && valid (getCharInGrid pos grid) pos grid = trace "valid and in grid" solveProgDebug grid (index+1) 0 
-    | otherwise = trace ("g: " ++ show grid ++ "\npos: " ++ show pos ++ "\ndigitIndex: " ++ show digitIndex) Nothing
+    | otherwise = trace ("dead end :( pos: " ++ show pos ++ " digit:  " ++ [digits!!digitIndex]) Nothing
     where pos = (getGridPos 9 index)
      
-solveP :: Grid -> Int -> Maybe Grid
-solveP grid digitIndex  
-    | digitIndex > 8 = trace ("digitIndex : " ++ show digitIndex) Just grid
-    | otherwise = let solvedGrid = solveProgDebug grid 1 digitIndex
-        in if solvedGrid /= Nothing then solvedGrid else solveP grid (digitIndex+1)  
+solveP :: Grid -> Int -> Int -> Maybe Grid
+solveP grid index digitIndex  
+    | digitIndex > 8 = trace ("digitIndex : " ++ show digitIndex) Nothing 
+    | otherwise = let solvedGrid = solveProgDebug grid index digitIndex
+        in if solvedGrid /= Nothing then solvedGrid else solveP grid index (digitIndex+1)  
 
 solve :: Grid -> Maybe Grid
-solve grid = solveP grid 0
+solve grid = solveP grid 1 0
 
 getDigitInGrid :: Grid -> StdGen -> (Int, StdGen)
 getDigitInGrid grid gen = first (abs . (\x y -> specialRem y x) (gridSize grid)) $ random gen 
