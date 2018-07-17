@@ -142,9 +142,8 @@ solveProgDebug grid index digitIndex = trace
 
 solveProg :: Grid -> Int -> Int -> Maybe Grid
 solveProg grid index digitIndex
-    | digitIndex > 8 = Nothing
     | valid (digits!!digitIndex) pos grid && not (isInGrid pos grid) = trace ("valid! pos: " ++ show pos ++ " digit: " ++ [digits!!digitIndex]) solveP (insertToGrid pos (digits!!digitIndex) grid) (index+1) 0
-    | isInGrid pos grid && valid (getCharInGrid pos grid) pos grid = trace "valid and in grid" solveProgDebug grid (index+1) 0 
+    | isInGrid pos grid && valid (getCharInGrid pos grid) pos grid = trace "valid and in grid" solveP grid (index+1) 0 
     | otherwise = trace ("dead end :( pos: " ++ show pos ++ " digit:  " ++ [digits!!digitIndex]) Nothing
     where pos = (getGridPos 9 index)
      
