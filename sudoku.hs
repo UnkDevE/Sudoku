@@ -59,7 +59,7 @@ getCol col grid =
     foldr (\x acc -> if (fst x) `rem` 9 == col then (snd x):acc else acc) [] $ zip [1..] $ flatten grid 
 
 find3by3 :: (Int, Int) -> (Int, Int)
-find3by3 pos = join bimap (`rem` 3) pos 
+find3by3 pos = join bimap (ceiling . (/3) . fromIntegral) pos 
 
 getCharInGrid :: (Int, Int) -> Grid -> Char 
 getCharInGrid pos grid = fromJust $ Map.lookup (snd pos) $ fromJust $ Map.lookup (fst pos) grid
@@ -135,22 +135,18 @@ testGrid = insertManyToGrid
 digits :: [Char]
 digits = ['1'..'9']
 
-solveProgDebug :: Grid -> Int -> Int -> Maybe Grid
-solveProgDebug grid index digitIndex = trace 
-    ("calling solveProg with index: " ++ show index ++ " digit: " ++ show digitIndex )
-    solveProg grid index digitIndex
-
 solveProg :: Grid -> Int -> Int -> Maybe Grid
 solveProg grid index digitIndex
-    | valid (digits!!digitIndex) pos grid && not (isInGrid pos grid) = trace ("valid! pos: " ++ show pos ++ " digit: " ++ [digits!!digitIndex]) solveP (insertToGrid pos (digits!!digitIndex) grid) (index+1) 0
-    | isInGrid pos grid && valid (getCharInGrid pos grid) pos grid = trace "valid and in grid" solveP grid (index+1) 0 
-    | otherwise = trace ("dead end :( pos: " ++ show pos ++ " digit:  " ++ [digits!!digitIndex]) Nothing
+    | valid (digits!!digitIndex) pos grid && not (isInGrid pos grid) = solveP (insertToGrid pos (digits!!digitIndex) grid) (index+1) 0
+    | isInGrid pos grid && valid (getCharInGrid pos grid) pos (insertToGrid pos '.' grid) = solveP grid (index+1) 0 
+    | otherwise = Nothing
     where pos = (getGridPos 9 index)
      
 solveP :: Grid -> Int -> Int -> Maybe Grid
 solveP grid index digitIndex  
-    | digitIndex > 8 = trace ("digitIndex : " ++ show digitIndex) Nothing 
-    | otherwise = let solvedGrid = solveProgDebug grid index digitIndex
+    | index > 81 = trace Just grid
+    | digitIndex > 8 = Nothing 
+    | otherwise = let solvedGrid = solveProg grid index digitIndex
         in if solvedGrid /= Nothing then solvedGrid else solveP grid index (digitIndex+1)  
 
 solve :: Grid -> Maybe Grid
@@ -168,8 +164,8 @@ fillSudokuGrid grid gen clues
           (y, gen'') = getDigitInGrid grid gen'
           digit = digits!!(abs $ rem (fst $ random gen'') $ gridSize grid)
 
-printSudokuGrid :: Grid -> IO[()]
-printSudokuGrid grid = do
+printGrid :: Grid -> IO[()]
+printGrid grid = do
     let rows = map flattenRow $ snd $ unzip $ Map.toList grid
     mapM putStrLn rows
 
