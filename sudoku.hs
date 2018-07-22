@@ -137,17 +137,20 @@ digits = ['1'..'9']
 
 solveProg :: Grid -> Int -> Int -> Maybe Grid
 solveProg grid index digitIndex
-    | valid (digits!!digitIndex) pos grid && not (isInGrid pos grid) = solveP (insertToGrid pos (digits!!digitIndex) grid) (index+1) 0
-    | isInGrid pos grid && valid (getCharInGrid pos grid) pos (insertToGrid pos '.' grid) = solveP grid (index+1) 0 
+    | valid (digits!!digitIndex) pos grid && not (isInGrid pos grid) = 
+        solveP (insertToGrid pos (digits!!digitIndex) grid) (index+1) 0
     | otherwise = Nothing
     where pos = (getGridPos 9 index)
      
 solveP :: Grid -> Int -> Int -> Maybe Grid
 solveP grid index digitIndex  
-    | index > 81 = trace Just grid
+    | index > 81 = Just grid
     | digitIndex > 8 = Nothing 
+    | isInGrid pos grid && valid (getCharInGrid pos grid) pos (insertToGrid pos '.' grid) = 
+        solveP grid (index+1) 0 
     | otherwise = let solvedGrid = solveProg grid index digitIndex
         in if solvedGrid /= Nothing then solvedGrid else solveP grid index (digitIndex+1)  
+    where pos = (getGridPos 9 index)
 
 solve :: Grid -> Maybe Grid
 solve grid = solveP grid 1 0
